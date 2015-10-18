@@ -1,0 +1,81 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: png - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1B0.tmp" with contents
+[
+/nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\zlib" /D "_MBCS" /D "_LIB" /D "WIN32" /D "_DEBUG" /D "AC_SRC_ALPHA" /Fo"..\..\Debug/" /Fd"..\..\Debug/" /FD /GZ /c 
+"F:\svn_src\trunk\src\png\png.c"
+"F:\svn_src\trunk\src\png\pngerror.c"
+"F:\svn_src\trunk\src\png\pnggccrd.c"
+"F:\svn_src\trunk\src\png\pngget.c"
+"F:\svn_src\trunk\src\png\pngmem.c"
+"F:\svn_src\trunk\src\png\pngpread.c"
+"F:\svn_src\trunk\src\png\pngread.c"
+"F:\svn_src\trunk\src\png\pngrio.c"
+"F:\svn_src\trunk\src\png\pngrtran.c"
+"F:\svn_src\trunk\src\png\pngrutil.c"
+"F:\svn_src\trunk\src\png\pngset.c"
+"F:\svn_src\trunk\src\png\pngtrans.c"
+"F:\svn_src\trunk\src\png\pngvcrd.c"
+"F:\svn_src\trunk\src\png\pngwio.c"
+"F:\svn_src\trunk\src\png\pngwrite.c"
+"F:\svn_src\trunk\src\png\pngwtran.c"
+"F:\svn_src\trunk\src\png\pngwutil.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1B0.tmp" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1B1.tmp" with contents
+[
+/nologo /out:"..\..\Debug\png.lib" 
+\svn_src\trunk\Debug\png.obj
+\svn_src\trunk\Debug\pngerror.obj
+\svn_src\trunk\Debug\pnggccrd.obj
+\svn_src\trunk\Debug\pngget.obj
+\svn_src\trunk\Debug\pngmem.obj
+\svn_src\trunk\Debug\pngpread.obj
+\svn_src\trunk\Debug\pngread.obj
+\svn_src\trunk\Debug\pngrio.obj
+\svn_src\trunk\Debug\pngrtran.obj
+\svn_src\trunk\Debug\pngrutil.obj
+\svn_src\trunk\Debug\pngset.obj
+\svn_src\trunk\Debug\pngtrans.obj
+\svn_src\trunk\Debug\pngvcrd.obj
+\svn_src\trunk\Debug\pngwio.obj
+\svn_src\trunk\Debug\pngwrite.obj
+\svn_src\trunk\Debug\pngwtran.obj
+\svn_src\trunk\Debug\pngwutil.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1B1.tmp"
+<h3>Output Window</h3>
+Compiling...
+png.c
+pngerror.c
+pnggccrd.c
+pngget.c
+pngmem.c
+pngpread.c
+pngread.c
+pngrio.c
+pngrtran.c
+pngrutil.c
+pngset.c
+pngtrans.c
+pngvcrd.c
+pngwio.c
+pngwrite.c
+pngwtran.c
+pngwutil.c
+Generating Code...
+Creating library...
+
+
+
+<h3>Results</h3>
+png.lib - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

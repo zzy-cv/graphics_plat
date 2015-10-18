@@ -1,0 +1,269 @@
+Gif 文件结构与解码器
+
+1.  前记
+     一直以来,blog对我来说, 与其说是写给别人看,不如说是给自己看得. 一些只有笨蛋才会返的错误,白痴才不知道的原理, 就让笨蛋白痴写下来给自己看吧. 你看, 前面至少已经有一个错字了:)  
+     直到最近写一个东西时, 突然需要某一个gif, 还希望透明.  要我去装photoshop? 哦,算了吧.  好像挺简单的, 于是我放下手边的进程,开始投入gif,我以为是2天搞定, 后来,写完后觉得, 既然实现gif透明了, 为何不把效果展示给用户看? 要我用gdi+ ?  com 组件?前者我很喜欢,后者我很头大. 可是想到一个gif透明工具, 里面的解码器竟然是调用gdi+这些第三方的, 嗯, 一个字形容,不爽:)  (我是笨蛋)   其中遇到的一些问题, 网络上一般语焉不详, 所以斗胆写了, 嗯, 写了这篇狗屎........
+2. 文件结构
+    巴尔扎克说过类似的话: 第二个形容女人如花的是一个蠢货. 作为笨蛋我不希望是蠢货, 所以我不费时费力,把外面到处都有的东西再花时间写一遍, 我喜欢偷懒, 所以我来引用, 各位可以看看下面的链接:
+http://local.wasp.uwa.edu.au/~pbourke/dataformats/gif/   这是一个英文文档, 写的很好,很详细
+http://www.cnblogs.com/thinhunan/archive/2006/04/12/372942.html   这是那个英文文档的翻译, 写的很好, 很详细. 可是缺少一些解释,有些东西也有纰漏, 这正是我等一下要说的.
+     纵观整个Gif结构,  我们看到两种快结构( Block Struct ) , 一种是定长,一种是那个.   
+     定长:  1. Gif头  2. Gif 画布描述头, 英文叫逻辑屏幕标识符(Logical Screen Descriptor) .  3.Gif帧描述头 英文叫图象标识符(Image Descriptor) 4.Gif扩展控制头 英文叫图形控制扩展(Graphic Control Extension)   5. Gif 结束块(一个字节3B)     
+     不定长:  颜色表(包括全局和局部),  数据块.     (还有一些什么注释块, 应用程序扩展块,图像文字扩展块)
+     在英文文档中,有一些名词是我们迷惑我们的, 比如什么叫逻辑屏幕? 为什么我的GIF会和屏幕有关系,还是逻辑的? 哦,不,我大脑要不逻辑了.   其实所谓屏幕,其实是指Gif的图像的"总"大小.  我称之为Gif的画布描述.  然后说说Gif帧描述头(图像标识符-Image Descriptor),对于拥有n帧Gif(即动画), 我们会有n帧描述头, (当然,官方叫它图像标识符,我觉得这名字起的很牛屎) , Gif有一个特点: "每一帧可以只在画布的某一区域绘画" , 比如在一片草地上,一只猪在原地跑, Gif可以只在第一帧画一幅背景, 以后的每一帧只在猪的地方画上猪...........汗 所以我们才看到Gif图像标识符会有一个 left, top ,width, depth 的结构.  这也是我叫他 帧描述头的原因,他只是画布(整个Gif)的一部分.
+     再说说Gif扩展控制头, 他不是必需的, 但是如果有了它,可以实现透明,还可以决定绘画上下帧时对于"两者没有重叠的地方"的取舍. ( 可以保留, 或者用背景色覆盖 )
+     有一个问题, 我们知道Gif协议有87a和89a两种, 我建议大家不用在乎两者的区别. 您知道,87a的协议中没有Gif扩展控制头, 可是我亲眼看到一个87a的Gif 有扩展控制块............
+     另一个问题, 尽管Gif协议看上去许多块没有顺序的要求,特别是注释块,应用程序扩展块,这种无足轻重的块可以出现在任何位置. 但是其他一些重要块还是有内定的顺序. 一般是：Gif头---画布描述---全局颜色表(如果画布描述头说有全局表的话)---Gif扩展控制头(可能没有)---Gif帧描述头---局部颜色表(如果Gif帧描述头说有局部颜色表)---数据块------重复(Gif控制,描述,局部颜色,数据)----结束块.
+      颜色表和数据块的结构参看那两文档" 2. 的第一段".  
+      什么注释块,程序扩展块, 图像文字扩展块,文档说的有点模糊. 实际上他们的结构是相似的, 都是一个头+数据. 而数据的结构和"颜色表,压缩数据块"的排布是一模一样的, 都是 [1个字节表示长度][......][一个字节表示长度][.......][最后0,表示后面的数据长度是0,没有数据了]
+       基本上在结构方面我也就这些要补充, 如果还有疑问,可以提问,我会添加.
+3.解码器
+       巴尔扎克说过类似的话: 如果你是蠢货,就赞美女人如花吧! 废话少说,上文档:
+        http://blog.csdn.net/whycadi/archive/2006/05/29/760576.aspx    其中包含了编码和解码. 您必须看懂编码,就能圆满理解解码. 理解了就不难了, 比起编码,解码实在太容易了. 当然细节处这篇文章没有涉及.
+        问题一: 在解码的解说时,原文说: "第一步，取第一个和第二个数据，是（A，B），不认得，令6＝（A，B）" , 在实际解码中您完全不必要去考虑,取得的两个数据是在过去是不是出现,  看看编码的时候,你就会知道, 每个数据组合在解码时都是全新的Code, 你只需另Code+1即可.
+        问题二: 在实际的解码中, 第一个数据往往就是CLEAN标志, 这是为了算法而优化的设计,这样我们能直接进入解码循环,而不必在循环外部初始化.
+        问题三: 在实际编码中, 一个Code最大长度是12bit,  能表示最大数为4095. Gif协议说, 在4095以后会使用CLEAN标志归零. 这里就有一个问题, 也许这里说不明白,但是您亲自动手写一写,就会明白了. 我用程序说话:
+
+        //下面这段程序是读取数据时,确定数据长度的.
+        //wCurCode是当前编码
+         //byBitWidth是当前数据长度
+         //注释中byOriBitWidth是指初始时的数据长度,也就是所谓的:LZW code size
+        while( wCurCode > ((1<<byBitWidth)-1) )//考虑到单色系统, wCurCode = 4, byOriBitWidth = byCurBitWidth = 1;所以用While,而没有用if
+        byBitWidth++;
+    if( byBitWidth>12 )
+            byBitWidth = 12;
+问题就是,你还没有遇到CLEAN,  byBitWidth 就要超过12,变成13了, 这不是不符合要求了吗? 没错, 很奇怪的地方, 解决的办法就是继续用 12bit, 而不是13bit. 幸运的是, 其实这个时候,读取的数据就是CLEAN标志. 这个问题困扰我很久.真该死.
+         好了,下面我给出一个算法, 这是一个非常不安全的算法,它假设调用者给予它的内存,能够放下所有图像数据, 因为我不想因为旁枝末节的东西,影响您的阅读,我删除了所有检查,把一些功能以函数的方式分解, 尽管,这样解码速度会有影响,当然,这对您有好处,不是吗?
+         
+
+BOOL
+_UncompressGifFrame(PBYTE pGifImageData, PBYTE pOutput)
+{
+    //* 1. 把pGifImageData指向的数据,转换成纯粹的图像压缩数据,便于处理
+    DWORD dwCompressDataSize = 0;
+    //扫描指针pTmp,计算实际数据大小(即不包含每一个块的第一个字节)
+    PBYTE pTmp = pGifImageData+1;//第一个字节是 LZW Mini Code
+    while( pTmp[0]!=0 )
+    {
+        dwCompressDataSize+=pTmp[0];
+        pTmp+=pTmp[0]+1;// +1 表示算上自己本身
+    }
+    //创建压缩数据数组
+    PBYTE npImgData = new BYTE[ dwCompressDataSize ];
+    ::memset( npImgData, 0, dwCompressDataSize );
+    pTmp = pGifImageData + 1;//第一个字节是 LZW Mini Code
+    for( DWORD i = 0; pTmp[0]!=0 ; i+=pTmp[0],pTmp+=pTmp[0]+1)
+        ::memcpy( npImgData+i, pTmp+1,pTmp[0]);
+    //* 2. 解压缩数据
+    BYTE byOriBitWidth = pGifImageData[0];
+    BYTE byCurBitWidth = byOriBitWidth + 1;
+    WORD GIF_CLEAN = 1<<byOriBitWidth;//得到CLEAN标志
+    WORD GIF_END = GIF_CLEAN+1;//得到END标志
+    WORD wCurCode = GIF_END+1;//当前Code
+    BYTE  byBitI = 0; //用于定位当前的数据,详细见GETCURDATA()
+    DWORD dwByteI = 0;
+    //前缀后缀记录器
+    WORD  arrPrefix[4097]={0};
+    WORD  arrPostfix[4097]={0};
+    //输出前缀堆栈数组
+    WORD  arrStack[4098] = {0};//每当一个输出一个前缀的时候, 为了正确表示这个前缀所代表的数据, 配合arrPrefix,arrPostfix,输出到arrStack
+                               //再从arrStack的最末端,输出到输出数组pOutput;
+    DWORD dwOutputI = 0;//"输出数组"计数器
+    DWORD wPrefix = GETCURDATA();
+    DWORD wPostfix = 0;
+    for( ;dwByteI<dwCompressDataSize;)
+    {
+        if( wPrefix == GIF_END )
+            break;
+        if( wPrefix == GIF_CLEAN )
+        {
+            wCurCode = GIF_END+1;
+            byCurBitWidth = byOriBitWidth;
+            ::wmemset( (PWSTR)arrPrefix, 0 , sizeof(arrPrefix)/sizeof(WORD));
+            ::wmemset( (PWSTR)arrPostfix,0 , sizeof(arrPostfix)/sizeof(WORD));
+            wPrefix = GETCURDATA();
+            continue;
+        }
+        //1.把前缀写入前缀记录数组
+        arrPrefix[wCurCode] = wPrefix;
+        //2.得到后缀,写入处理过的后缀记录数组
+        wPostfix = GETCURDATA();
+        WORD wPrefixOfPostfix = wPostfix;
+        while( wPrefixOfPostfix > GIF_CLEAN )
+            wPrefixOfPostfix = arrPrefix[wPrefixOfPostfix];
+        arrPostfix[wCurCode] = wPrefixOfPostfix;
+        //3 输出前缀到"输出数组"
+        WORD wTmp = wPrefix;
+        WORD wStackUsedSize = 0;//实际使用的arrStack的尺寸.
+        for( ;wStackUsedSize<sizeof(arrStack)/sizeof(WCHAR)-2; )
+        {
+            if( wTmp > GIF_CLEAN )
+            {
+                arrStack[wStackUsedSize++] = arrPostfix[wTmp];
+                wTmp = arrPrefix[wTmp];
+            }
+            else
+            {
+                break;
+            }
+        }
+      
+        for(int i = wStackUsedSize-1;i>= 0;)//wStackUsedSize-dwCopySize;)
+        {
+                        pOutput[dwOutputI++] = arrStack[i--];
+        }
+    }
+        //4.后缀变前缀
+        wPrefix = wPostfix;
+        //5.wCurCode加一
+        wCurCode++;
+        
+    }//解码结束
+    
+    if( npImgData!= NULL )
+    {
+        delete[] npImgData;
+        npImgData = NULL;
+    }
+    return TRUE;
+}
+         
+
+#define GETCURDATA()     _GetCurData( npImgData, wCurCode, byCurBitWidth,dwByteI, byBitI )
+ 
+
+DWORD  
+_GetCurData( PBYTE pImgData,WORD& wCurCode, BYTE& byBitWidth , DWORD& dwByteI, BYTE& byBitI )
+{
+    //读取第一个数据到前缀
+    DWORD dwData = 0;
+        //根据wCurCode确定byCurBitWidth的值
+    while( wCurCode > ((1<<byBitWidth)-1) )//考虑到单色系统, wCurCode = 4, byOriBitWidth = byCurBitWidth = 1;
+        byBitWidth++;
+    if( byBitWidth>12 )
+        byBitWidth = 12;
+    
+    dwData = *(DWORD*)(pImgData+dwByteI);
+    dwData = (dwData>>byBitI)&( (1<<byBitWidth)-1);
+    //增加byBitI , dwByteI的计数
+    byBitI += byBitWidth;
+    dwByteI += byBitI/8;
+    byBitI = byBitI%8;
+RETURN:
+    return dwData;
+}
+解释:  头很大, 我最讨厌的事情就是看代码,头大.      我来解释一下解码的key:
+一. GETCURDATA( )
+
+首先是主函数中
+    BYTE  byBitI = 0; //用于定位当前的数据,详细见GETCURDATA()
+    DWORD dwByteI = 0;
+这两个用于定位当前数据, 我们面对的是数据流, 有时候一个数据是10bit,但是下一个可能就是11bit了,我们用两个变量去描述, 考虑到最长数据12bit, 我们认识到,无论如何一个DWORD的数据可以完整定位一个区域,包含目标数据, 所以我们通过dwByteI来定位字节, byBitI来定位具体是从第几个数位开始. 所以我们会看到, 传递到GETCURDATA,即_GetCurData():
+    dwData = *(DWORD*)(pImgData+dwByteI);
+    dwData = (dwData>>byBitI)&( (1<<byBitWidth)-1);
+通过这两步,我们定位了数据.
+然后我们计算这次数据以后,的定位:
+    //增加byBitI , dwByteI的计数
+    byBitI += byBitWidth;
+    dwByteI += byBitI/8;
+    byBitI = byBitI%8;
+看看byBitI是否超过8位, 说明移向了下一个字节.
+ 
+二.  前缀后缀数组:
+    //前缀后缀记录器
+    WORD  arrPrefix[4097]={0};
+    WORD  arrPostfix[4097]={0};
+    DWORD wPrefix = GETCURDATA();
+    DWORD wPostfix = 0;
+每次读取到新数据就写入前缀后缀记录器, 注意,CLEAN和END的处理
+三. 输出
+  //输出前缀堆栈数组
+    WORD  arrStack[4098] = {0};//每当一个输出一个前缀的时候, 为了正确表示这个前缀所代表的数据, 配合arrPrefix,arrPostfix,输出到arrStack
+                               //再从arrStack的最末端,输出到输出数组pOutput;
+ 我来解释一下, 假设LZW Mini Code 是 8 , 也就是说CLEAN = 256 END = 257  ;   然后我们得到一个数据 1200, 根据前缀和后缀的性质(查看给出的文档的编码部分),  后缀总是小于 256 的原始数据, 而前缀有可能是>257的一个数字(代表某一个数据串),  所以我们要对前缀分析,得到一个数据到底表示什么数据串于是:
+
+      //3 输出前缀到"输出数组",首先要解析前缀,使用前缀堆栈数组
+
+        WORD wTmp = wPrefix;
+
+        WORD wStackUsedSize = 0;//实际使用的arrStack的尺寸.
+        for( ;wStackUsedSize<sizeof(arrStack)/sizeof(WCHAR)-2; )
+        {
+            if( wTmp > GIF_CLEAN )//直到发现前缀值小于CLEAN,说明到头了
+            {
+                arrStack[wStackUsedSize++] = arrPostfix[wTmp];//每一个后缀写入
+                wTmp = arrPrefix[wTmp];
+            }
+            else
+            {
+                break;
+            }
+        }
+      
+       //最后把前缀代表的数据串写入输出数组,完成了一次解码,其实很简单,不是吗?
+        for(int i = wStackUsedSize-1;i>= 0;)//wStackUsedSize-dwCopySize;)
+        {
+                        pOutput[dwOutputI++] = arrStack[i--];
+        }
+p.s: 看不懂请问问题.
+ 
+四. 关于GIF的压缩数据流.
+      尽管我告诉大家,应该如何正确定位数据,可是其实这个问题深入了,你会发现数据位的排布很畸形, 但是我觉得您应当知道:
+我们的算法:
+    dwData = *(DWORD*)(pImgData+dwByteI);
+    dwData = (dwData>>byBitI)&( (1<<byBitWidth)-1);
+我们来举些例子:
+某gif,  mini lzw code 是 7 , 所以 CLEAN = 128,
+数据开始是这样的:  80 0B 82 83 84 85 86 87
+第一个数据是 7+1 位 80 0B 变成2进制:  10000000 00001011
+很幸运80H = 128 就是CLEAN
+再来一个例子:
+某gif, mini lzw code 是 4, CLEAN = 16,
+10 C9 49 2B 0A 26 EB 9D
+10 C9 : 00010000  11001001
+第一个数据是 4+1 位, 是不是 00010 ?
+当然不是! 很疑惑? 正确的是 10000
+这些都是鸡蛋惹得祸, 我们知道世界上曾经因为到底是打碎鸡蛋的大头还是小头,爆发过世界大战.
+计算机领域也惹来了鸡蛋的大头小头麻烦.
+听说Intel和微软有一腿,所以intel当然支持微头, 小头万岁!
+所谓小头, 计算机把 数据 0x1234 (这里有2个字节) 写成 3412
+所以上面 10 C9 其实是 11001001 00010000
+这样第一个数据是: 10000 第二个是 01000
+ 
+3.  后记
+      本来还要写一下关于交叉显示的问题,但和解码关系不大,其实是写的烦死了.............所以没写,汗............各位多提意见,看看有没有什么错误漏洞什么的.
+     看别人文章,始终 书上得来终觉浅,绝知此事要躬行.
+啊,花朵好似女人之美,~~
+
+出售舆情监控系统
+
+如果图片或页面不能正常显示请点击这里
+【文章投稿】【收藏此页】【飞诺社区】【发表评论】【关闭】上一篇： [转] Unsigned VS signed下一篇： Problem 1242C++实例推荐文章不定参数的应用在屏幕中央显示 welcome to asm! 尽量使用ID取消ACE_Event_Handler定时器软件实现多国语言界面的简单方法（转载）如何实现递归与非递归的转换……c++中的explicit关键字孙鑫视频笔记01第二人生的源码分析(三十五)分析消息模板文件太想成功了--成功之前,你是否养成了这些习惯?深拷贝与浅拷贝PSPTOOL时间管理软件(转)Linux Socket学习（七） AIX5.3环境下C/C++实现WebService客户端的方法(gSOAP)C++/C编程指南-第6章 函数设计 回车和换行O(1)空间复杂度删除一棵二叉树
+文章评论
+暂无数据！请您留言
+昵称：	 
+验证码：	
+注册会员 会员登录
+ 
+ 也许你对以下文章感兴趣再读内核存储管理(4)：存储区域管理 banker's algorithmCOM技术纵横之谈（初学者）const双向非循环递增链表——插入，删除，清空给ActiveX控件做数字签名练习1-17用标准C++搞定了一个小ACM题频道地图
+C++
+C++系列教程C++实例C++技术文档C++/C语言函数Mangos
+C
+C++
+Java
+VB
+Delphi
+Foxpro
+汇编语言
+游戏开发
+移动开发
+软件工程师
+软工与管理
+VC
+shell编程
+C#
+C++实例相关文章realloc()VC++头文件的使用基类和成员的访问权限（msdn）syslog(),openlog(),closelog()C++ 的粗略理解VC中的一些常用方法（20条） Interprocess Communication (IPC)和管道Pipes 程序中的数据在内存中的布局 Visual C++实现各种文字特殊效果DirectSound学习指南之协作级别Mapx加载tab文件字符编码转化 usaco 4.4 Shuttle Puzzle 找规律 开发Windows 2000/XP下的防火墙CLayeredWindowHelperST v1.0透明如何写出专业的C头文件大内高手—内存模型 跨平台的C++ GUI库——wxWidgets编译 typedef用法详解指针经典题目 CppUnit 遇到的问题和解决方法c语言难点分析整理大内高手—序 usaco 4.3 Letter Game 搜索C++实例热门文章DLL+ ActiveX控件+WEB页面调用例子在VC对话框中实现打印和打印预览（附实现步骤）ntohs, ntohl, htons,htonl的比较和详解C语言文件操作函数大全正确获取硬盘序列号源码MultiByteToWideChar和WideCharToMultiByte用法详解定义C/C++全局变量/常量几种方法的区别10个重要的算法C语言实现源代码：拉格朗日，牛顿插值，高斯，龙贝格，牛顿迭代，牛顿-科特斯，雅克比，秦九昭，幂法，高斯塞德尔CFile和CStdioFile的文件读写使用方法FFT算法实现
+English  |  关于我们  |  诚聘英才  |  联系我们  |  网站大事 | 友情链接  |  广告服务  |  网站地图
+Copyright?2008-2011 飞诺网[diybl.Com] 版权所有
+      飞诺网 鲁ICP备10012328号
+IT技术从现在起飞

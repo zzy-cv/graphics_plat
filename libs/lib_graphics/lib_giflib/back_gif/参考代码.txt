@@ -1,0 +1,1 @@
+http://cpansearch.perl.org/src/ADDI/Imager-0.43/gif.c
