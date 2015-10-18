@@ -172,8 +172,8 @@ LRESULT CALLBACK WndProc ( HWND hwnd, UINT message, WPARAM wParam,LPARAM lParam)
 #include <stdio.h>
 #include <SDL.h>
 
-#define WIDTH 640
-#define HEIGHT 480
+#define WIDTH  1024
+#define HEIGHT 768
 #define BPP 4
 #define DEPTH 32
 
