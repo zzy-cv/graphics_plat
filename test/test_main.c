@@ -40,7 +40,7 @@ void test_draw(void)
 	clear_rgb(0x0, 0x0, 0x0);
 
 #if 1
-	test_zzf_main();
+	test_bmp();
 #endif
 
 	// test jpeg

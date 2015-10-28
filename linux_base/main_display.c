@@ -50,6 +50,17 @@ void fill_datas(void)
 	test_draw();
 }
 
+void putpixel(SDL_Surface *screen, int x, int y, Uint8 r, Uint8 g, Uint8 b)
+{
+	Uint32 *pixel;
+	Uint32 rgb;  
+
+	rgb = SDL_MapRGB( screen->format, r, g, b );
+	
+	pixel = (Uint32*) screen->pixels  + y + x;
+	*pixel = rgb;
+}
+
 void putpixel_for_rgb(int x, int y, unsigned char r, unsigned char g, unsigned char b)
 {
 	datas_ptr[x+y*width] = MY_RGB_FOR_BMP(r, g, b); 
