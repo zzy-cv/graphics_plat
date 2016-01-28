@@ -7,7 +7,7 @@
 static void base_test_draw(void)
 {
     draw_line(0, 0, 100, 100, RGB(255, 0, 0));
-    draw_arraw_line_with_angle(100, 100, 150, 100);
+    draw_arraw_line_with_angle(100, 100, 150, 200);
     DrawCircle(100, 100, 50, RGB(255, 0, 0));
 }
 
@@ -43,9 +43,11 @@ void test_draw(void)
 	clear_rgb(0x0, 0x0, 0x0);
 
 // basic test
+	printf("basic test\n");
 	base_test_draw();
 
 // test draw chinese
+	printf("draw chinese test\n");
 #if 1
 	show_chinese(30, 30, (unsigned char *)"Äã");
 #endif
