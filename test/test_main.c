@@ -1,7 +1,8 @@
 // #include "test.h"
+#include "main.h"
 #include "basedraw.h"
 #include "dot_font.h"
-#include "bmp.h"
+//#include "bmp.h"
 
 static void base_test_draw(void)
 {
@@ -16,6 +17,7 @@ static void test_chinese(void)
     show_chinese(300 + 16 + 2, 300, "ÊÔ");	
 }
 
+#if 0
 static void test_bmp(char *bmp_name)
 {
     draw_bmp(bmp_name);
@@ -32,6 +34,7 @@ int test_end(void)
 	gif_main_end();
 	return 0;
 }
+#endif
 
 void test_draw(void)
 {
@@ -39,7 +42,15 @@ void test_draw(void)
 	
 	clear_rgb(0x0, 0x0, 0x0);
 
+// basic test
+	base_test_draw();
+
+// test draw chinese
 #if 1
+	show_chinese(30, 30, (unsigned char *)"Äã");
+#endif
+
+#if 0
 	test_bmp();
 #endif
 
@@ -51,11 +62,6 @@ void test_draw(void)
 	// test gif
 #if 0
 	gif_main_play();
-#endif
-
-	// test draw chinese
-#if 0
-	show_chinese(30, 30, (unsigned char *)"Äã");
 #endif
 
 	// test draw number

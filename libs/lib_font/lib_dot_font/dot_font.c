@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "main.h"
 #include "dot_font.h"
 #include "basedraw.h"
 
@@ -7,7 +8,7 @@ void show_chinese(int start_x, int start_y, unsigned char *buf)
     unsigned char matrix[16][2];
     FILE *f_hzk;
     int i, j, k;
-    if((f_hzk = fopen(".\\res\\res_font\\hzk16","rb"))==NULL)
+    if((f_hzk = fopen("out/HZK16","rb"))==NULL)
     {
 	      printf("\nOpoen file: hzk16 error!\n");
 	      exit(0);
@@ -22,7 +23,7 @@ void show_chinese(int start_x, int start_y, unsigned char *buf)
         for(i = 0; i < 2; i++)
             for(k = 0; k < 8; k++)
 		if(matrix[j][i]&(0x80>>k))                        /*测试为1的位则显示*/
-		    putpixel(i*8+k + start_x, j + start_y, RGB(255, 0, 0));
+		    putpixel(i*8+k + start_x, j + start_y, RGB(255, 255, 255));
     fclose(f_hzk);
 }
 

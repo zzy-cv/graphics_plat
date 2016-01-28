@@ -1,17 +1,17 @@
-#include <windows.h>
-
 #include "basedraw.h"
 #include "main.h"
 #include "math.h"
 
-void clear(long color)
+void clear(unsigned int color)
 {
-	int i, j;
-	int w = get_width() - 100;
-	int h = get_height() -100;
-	for(i = 0; i < h; i++)
-		for(j = 0; j < w; j++)
-			putpixel(i, j, color);	
+	int x, y;
+	
+	int w = get_width();
+	int h = get_height();
+
+	for(y = 0; y < h; y++)
+		for(x = 0; x < w; x++)
+			putpixel(x, y, color);
 }
 
 void clear_rgb(unsigned char r, unsigned char g, unsigned char b)

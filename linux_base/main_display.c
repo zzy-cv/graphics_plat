@@ -1,33 +1,52 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "main.h"
 #include "basedraw.h"
 // #include "test.h"
 #include <assert.h>
-#define MY_RGB(r,g,b)    ((unsigned int)(((unsigned char)(r)|((unsigned short)((unsigned char)(g))<<8))|\
-                 (((unsigned int)(unsigned char)(b))<<16)))
-#define MY_RGB_FOR_BMP(r,g,b)  ((unsigned int)(((unsigned char)(b)|((unsigned short)((unsigned char)(g))<<8))|\
-                 (((unsigned int)(unsigned char)(r))<<16)))     
-#define MERGE_RGB565(r, g, b) (((b) & 31) + (((g) & 63) << 5) + (((r) & 31) << 11))
-#define RGB888TO565(r, g, b)  MERGE_RGB565(((r) >> 3), ((g) >> 2), ((b) >> 3))
-#define EXTRACT_RGB888(clr, r, g, b)     do{ \
-r = ((clr) >> 16) & 255; g = ((clr) >> 8) & 255; b = (clr) & 255; \
-}while(0)
-	
-#define EXTRACT_RGB565(clr, r, g, b)	    {\
-r = ((clr) >> 11) & 31; g = ((clr) >> 5) & 63; b = (clr) & 31;\
-}while(0)
-	
-#define RGB565TO888(r, g, b) (((r)<<19)|((g)<<10)|(b<<3))
 
 static int width = 0;
 static int height = 0;
-static unsigned long *datas_ptr = NULL;
+static unsigned int *datas_ptr = NULL;
 
 static void init(void);
 static void test_main(void);
 static void test1(void);
 static void test_draw_line(void);
+
+extern void test_draw(void);
+
+void set_width(int w) {
+	width = w;
+}
+
+void set_height(int h) {
+	height = h;
+}
+
+void set_display_buf(void) {
+	datas_ptr = malloc(width*height*sizeof(unsigned int));
+}
+
+int get_width() {
+	return width;
+}
+
+int get_height() {
+	return height;
+}
+
+unsigned int *get_display_buf() {
+	return datas_ptr;
+}
+
+void draw_display_buffer(void)
+{
+	test_draw();
+	// init();
+	// test_draw();
+}
 
 int rgb888to565(int clr)
 {
@@ -44,31 +63,14 @@ int rgb565to888(int clr)
 	return RGB565TO888(r, g, b);
 }
 
-void fill_datas(void)
-{
-	init();
-	test_draw();
-}
-
-void putpixel(SDL_Surface *screen, int x, int y, Uint8 r, Uint8 g, Uint8 b)
-{
-	Uint32 *pixel;
-	Uint32 rgb;  
-
-	rgb = SDL_MapRGB( screen->format, r, g, b );
-	
-	pixel = (Uint32*) screen->pixels  + y + x;
-	*pixel = rgb;
-}
-
 void putpixel_for_rgb(int x, int y, unsigned char r, unsigned char g, unsigned char b)
 {
 	datas_ptr[x+y*width] = MY_RGB_FOR_BMP(r, g, b); 
 }
 
-void putpixel(int x, int y, unsigned long color)
+void putpixel(int x, int y, unsigned int color)
 {
-	datas_ptr[x+y*width] = MY_RGB_FOR_BMP((unsigned char)color, (unsigned char)(color>>8), (unsigned char)(color>>16)); 
+	datas_ptr[x+y*width] = color; //MY_RGB_FOR_BMP((unsigned char)color, (unsigned char)(color>>8), (unsigned char)(color>>16)); 
 }
 
 void putpixel_big(int x, int y, unsigned long color, int factor)
@@ -254,11 +256,3 @@ int show_diff_buf16(const unsigned short *buf, int width_bmp)
 		//i = i + num;
 	}
 }
-
-static void init(void)
-{
-	width = get_width();
-	height = get_height();
-	datas_ptr = get_datas_ptr();
-}
-
