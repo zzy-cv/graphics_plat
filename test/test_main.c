@@ -6,15 +6,15 @@
 
 static void base_test_draw(void)
 {
-    draw_line(0, 0, 600, 600, RGB(255, 0, 0));
-    draw_arraw_line_with_angle(300, 300, 200, 100);
-    DrawCircle(300, 300, 100, RGB(255, 0, 0));
+    draw_line(0, 0, 100, 100, RGB(255, 0, 0));
+    draw_arraw_line_with_angle(100, 100, 150, 100);
+    DrawCircle(100, 100, 50, RGB(255, 0, 0));
 }
 
 static void test_chinese(void)
 {
-    show_chinese(300, 300, "╡Б");
-    show_chinese(300 + 16 + 2, 300, "йт");	
+    show_chinese(100, 100, "╡Б");
+    show_chinese(100 + 16 + 2, 100, "йт");	
 }
 
 #if 0

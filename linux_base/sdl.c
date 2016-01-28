@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <SDL.h>
 
-#define WIDTH  1024
-#define HEIGHT 768
+#define WIDTH  800
+#define HEIGHT 600
 #define BPP 4
 #define DEPTH 32
 SDL_Surface *screen;
