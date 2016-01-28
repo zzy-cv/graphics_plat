@@ -1,16 +1,19 @@
 #include <stdio.h>
 #include <SDL.h>
 
-#define WIDTH  800
-#define HEIGHT 600
+#define WIDTH  1024
+#define HEIGHT 768
 #define BPP 4
 #define DEPTH 32
 SDL_Surface *screen;
+unsigned int display_buffer[WIDTH*HEIGHT];
 
 extern unsigned int *get_display_buf();
 extern void draw_display_buffer(void);
+extern void set_display_buf(void);
 
 static int plat_init(void) {
+	printf("plat_init: display_buffer=%p\n", display_buffer);
 	set_width(WIDTH);
 	set_height(HEIGHT);
 	set_display_buf();

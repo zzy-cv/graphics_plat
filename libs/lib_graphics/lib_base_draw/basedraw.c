@@ -16,12 +16,12 @@ void clear(unsigned int color)
 
 void clear_rgb(unsigned char r, unsigned char g, unsigned char b)
 {
-	int i, j;
+	int x, y;
 	int w = get_width();
 	int h = get_height();
-	for(i = 0; i < h; i++)
-		for(j = 0; j < w; j++)
-			putpixel_for_rgb(i, j, r, g, b);	
+	for(y = 0; y < h; y++)
+		for(x = 0; x < w; x++)
+			putpixel_for_rgb(x, y, r, g, b);	
 }
 
 

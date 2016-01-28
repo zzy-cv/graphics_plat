@@ -39,12 +39,17 @@ int test_end(void)
 void test_draw(void)
 {
 	static unsigned char  c = '9';
-	
+
+// clear screen
+#if 1
 	clear_rgb(0x0, 0x0, 0x0);
+#endif
 
 // basic test
+#if 1
 	printf("basic test\n");
 	base_test_draw();
+#endif
 
 // test draw chinese
 	printf("draw chinese test\n");
