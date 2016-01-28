@@ -39,10 +39,6 @@ int get_height() {
 	return height;
 }
 
-unsigned int *get_display_buf() {
-	return datas_ptr;
-}
-
 void draw_display_buffer(void)
 {
 	test_draw();

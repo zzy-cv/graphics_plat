@@ -14,6 +14,9 @@ dot_font.o: libs/lib_font/lib_dot_font/dot_font.c
 hzk16: res/res_font/HZK16
 	cp res/res_font/HZK16 out/
 
+config:
+	mkdir -p out
+
 run:
 	./out/main
 clean:

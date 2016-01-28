@@ -13,10 +13,14 @@ extern void draw_display_buffer(void);
 extern void set_display_buf(void);
 
 static int plat_init(void) {
-	printf("plat_init: display_buffer=%p\n", display_buffer);
+	// printf("plat_init: display_buffer=%p\n", display_buffer);
 	set_width(WIDTH);
 	set_height(HEIGHT);
 	set_display_buf();
+}
+
+unsigned int *get_display_buf() {
+	return display_buffer;
 }
 
 /*
