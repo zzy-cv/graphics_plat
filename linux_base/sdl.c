@@ -5,10 +5,9 @@
 #define HEIGHT 768
 #define BPP 4
 #define DEPTH 32
-SDL_Surface *screen;
-unsigned int display_buffer[WIDTH*HEIGHT];
+static SDL_Surface *screen;
+static unsigned int display_buffer[WIDTH*HEIGHT];
 
-extern unsigned int *get_display_buf();
 extern void draw_display_buffer(void);
 extern void set_display_buf(void);
 

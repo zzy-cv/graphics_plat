@@ -15,6 +15,7 @@ static void test_main(void);
 static void test1(void);
 static void test_draw_line(void);
 
+extern unsigned int *get_display_buf();
 extern unsigned int display_buffer[];
 extern void test_draw(void);
 
@@ -27,8 +28,8 @@ void set_height(int h) {
 }
 
 void set_display_buf(void) {
-	datas_ptr = display_buffer;
-	printf("datas_ptr=%p, display_buffer=%p\n", datas_ptr, display_buffer);
+	datas_ptr = get_display_buf();
+	printf("datas_ptr=%p\n", datas_ptr);
 }
 
 int get_width() {
