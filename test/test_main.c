@@ -17,12 +17,12 @@ static void test_chinese(void)
     show_chinese(100 + 16 + 2, 100, "ÊÔ");	
 }
 
-#if 0
 static void test_bmp(char *bmp_name)
 {
     draw_bmp(bmp_name);
 }
 
+#if 0
 int test_init(void)
 {
 	gif_main_init();
@@ -57,8 +57,8 @@ void test_draw(void)
 	show_chinese(30, 30, (unsigned char *)"Äã");
 #endif
 
-#if 0
-	test_bmp();
+#if 1
+	test_bmp("./res/res_bmp/1.bmp");
 #endif
 
 	// test jpeg

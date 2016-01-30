@@ -53,8 +53,8 @@ void update_screen(void)
 
 	buf = get_display_buf();
 
-	printf("screen->pitch/BPP=%d\n", screen->pitch/BPP);
-	printf("w=%d, h=%d\n", screen->w, screen->h);
+	//printf("screen->pitch/BPP=%d\n", screen->pitch/BPP);
+	//printf("w=%d, h=%d\n", screen->w, screen->h);
 	for(y = 0; y < screen->h; y++ ) 
 	{
 		ytimesw = y*screen->pitch/BPP;
@@ -101,11 +101,12 @@ int main(int argc, char* argv[])
 
 	while(!keypress) 
 	{
-		printf("update screen ...\n");
 		update_screen();
-		printf("update screen end\n");
-		if(SDL_MUSTLOCK(screen)) 
-		SDL_UnlockSurface(screen);
+
+		if(SDL_MUSTLOCK(screen)) {
+			SDL_UnlockSurface(screen);
+		}
+
 		SDL_Flip(screen); 
 		while(SDL_PollEvent(&event)) 
 		{      

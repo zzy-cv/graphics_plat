@@ -18,25 +18,25 @@
 typedef struct tag_tplat_BITMAPFILEHEADER         /* 位图文件信息头 */
 {
 	unsigned short int bfType;             /* 文件的类型，该值必需是0x4D42，也就是字符'BM' */
-	unsigned long bfSize;                  /* 整个文件的大小, 单位字节 */
-	unsigned long bf_reserved;             /* 保留，必须设置为0 */
-	unsigned long bfOffBits;               /* 从文件开始到位图数据开始之间的数据之间的偏移量 */
+	unsigned int bfSize;                  /* 整个文件的大小, 单位字节 */
+	unsigned int bf_reserved;             /* 保留，必须设置为0 */
+	unsigned int bfOffBits;               /* 从文件开始到位图数据开始之间的数据之间的偏移量 */
 }tplat_BITMAPFILEHEADER;
 
 #pragma pack(1)
 typedef struct tag_tplat_BITMAPINFOHEADER        /* 图象信息头 */
 {
-	unsigned long biSize;                 /* 图象信息头的长度 */             
-	long biWidth;                         /* 位图的宽度 */  
-	long biHeight;                        /* 位图的高度 */
+	unsigned int biSize;                 /* 图象信息头的长度 */             
+	int biWidth;                         /* 位图的宽度 */  
+	int biHeight;                        /* 位图的高度 */
 	unsigned short int biPanes;                 /* 位图的位面数，其值恒为1 */
 	unsigned short int biBitCount;              /* 位图每个象素的位数 */
-	unsigned long biCompression;          /* 	压缩说明 */
-	unsigned long biSizeImage;      /* 用字节数表示的位图数据的大小。该数必须是4的倍数 */
-	long biXPelsPerMeter;           /* 用象素/米表示的水平分辨率 */
-	long biYPelsPerMeter;           /* 用象素/米表示的垂直分辨率 */
-	unsigned long biClrUsed;        /* 位图使用的颜色数 */
-	unsigned long biClrImportant;   /* 指定重要的颜色数 */
+	unsigned int biCompression;          /* 	压缩说明 */
+	unsigned int biSizeImage;      /* 用字节数表示的位图数据的大小。该数必须是4的倍数 */
+	int biXPelsPerMeter;           /* 用象素/米表示的水平分辨率 */
+	int biYPelsPerMeter;           /* 用象素/米表示的垂直分辨率 */
+	unsigned int biClrUsed;        /* 位图使用的颜色数 */
+	unsigned int biClrImportant;   /* 指定重要的颜色数 */
 }tplat_BITMAPINFOHEADER;
 
 #pragma pack(1)
@@ -59,19 +59,26 @@ typedef struct tag_tplat_BITMAPINFO
 static FILE *f_bmp = NULL;
 
 // read a bmp file, and draw it directly
-static int begin_draw_bmp(unsigned char *file_name, int *colors, long *height, long *width)
+static int begin_draw_bmp(unsigned char *file_name, int *colors, int *height, int *width)
 {
 	tplat_BITMAPFILEHEADER bmfh;
 	tplat_BITMAPINFOHEADER bih;
 
+	printf("open bmp: %s\n", file_name);
 	if((f_bmp=fopen(file_name,"rb"))==NULL)
 	{
+		printf("bmp file open error!\n");
 		return -1;
 	}
 
+	printf("sizeof unsigned long=%d\n", sizeof(unsigned long));
+	printf("sizeof unsigned int=%d\n", sizeof(unsigned int));
+	printf("sizeof unsigned short=%d\n", sizeof(unsigned short));
 	fread(&bmfh,sizeof(tplat_BITMAPFILEHEADER),1,f_bmp);
+	printf("bmp magic: %x, bmp size: %x, bf_reserved=%x, bfOffBits=%x\n", bmfh.bfType, bmfh.bfSize, bmfh.bf_reserved, bmfh.bfOffBits);
 	if((bmfh.bfType != BITMAPFILETYPE) || (bmfh.bf_reserved != 0))
 	{
+		printf("bmp file header error!\n");
 		return -1;
 	}
 
@@ -82,9 +89,9 @@ static int begin_draw_bmp(unsigned char *file_name, int *colors, long *height, l
 	return 0;
 }
 
-static void draw_less_8bits_bmp(int bits, long height, long width)
+static void draw_less_8bits_bmp(int bits, int height, int width)
 {
-	long i,j;
+	int i,j;
 	unsigned char rgb;
 	int index;
 	tplat_RGBQUAD *temp;
@@ -146,9 +153,9 @@ static void draw_less_8bits_bmp(int bits, long height, long width)
 	free(temp);
 }
 
-static void draw24bits_bmp(int bits, long height, long width)
+static void draw24bits_bmp(int bits, int height, int width)
 {
-	long i,j;
+	int i,j;
 	unsigned char r, g, b;
 	int index;
 
@@ -159,26 +166,26 @@ static void draw24bits_bmp(int bits, long height, long width)
 			fread(&b, 1, 1, f_bmp);
 			fread(&g, 1, 1, f_bmp);
 			fread(&r, 1, 1, f_bmp);
-			putpixel(i, height - 1 - j, RGB(r, g, b));
+			putpixel(i, height - 1 - j, MY_RGB_FOR_BMP(r, g, b));
 			if((width*3 % 4) && (i == width-1))  // bmp图片行数据 4 字节对齐, 未优化
 			{
 				int dumy, nbyte = 0;
 				nbyte = 4 - width*3%4;
 				fread(&dumy, 1, nbyte, f_bmp);
 			}
-        }
-    }
+		}
+	}
 }
 
 static void end_draw_bmp()
 {
-    fclose(f_bmp);
+	fclose(f_bmp);
 }
 
 int draw_bmp(char *bmp_name)
 {
 	int bits;
-	long height, width;
+	int height, width;
 
 	if(begin_draw_bmp(bmp_name, &bits, &height, &width))
 	{
@@ -205,7 +212,7 @@ int draw_bmp(char *bmp_name)
 }
 
 // get bmp rgb value to a buffer
-static int get_bmp_major_info(unsigned char *file_name, long *width, long *height, int *colors)
+static int get_bmp_major_info(unsigned char *file_name, int *width, int *height, int *colors)
 {
 	tplat_BITMAPFILEHEADER bmfh;
 	tplat_BITMAPINFOHEADER bih;
@@ -232,95 +239,95 @@ static int get_bmp_major_info(unsigned char *file_name, long *width, long *heigh
 
 static void draw_less_8bits_bmp_buf(bmp_rawdata_t *bmp_buf)
 {
-    long i,j;
-    unsigned char rgb;
-    int index;
-    tplat_RGBQUAD *temp;
-    tplat_RGBQUAD rgb_data;
+	int i,j;
+	unsigned char rgb;
+	int index;
+	tplat_RGBQUAD *temp;
+	tplat_RGBQUAD rgb_data;
 	int bits, height, width;
 
 	bits = bmp_buf->depth;
 	height = bmp_buf->height;
 	width = bmp_buf->width;
 
-    temp = (tplat_RGBQUAD *)malloc(sizeof(tplat_RGBQUAD) * (1 << bits));
-    fread(temp, sizeof(tplat_RGBQUAD), (1 << bits), f_bmp);
-    
-    for(j = 0; j < height; j++)
-    {
-        for(i = 0; i < width; i++)
-        {
-        	  switch(bits)
-        	  {
-        	    case 1:
-                if(i%8 == 0)
-                {
-                    fread(&rgb, 1, 1, f_bmp);
-                    index = rgb>>7;
-                    rgb_data = temp[index];
-                    //putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
+	temp = (tplat_RGBQUAD *)malloc(sizeof(tplat_RGBQUAD) * (1 << bits));
+	fread(temp, sizeof(tplat_RGBQUAD), (1 << bits), f_bmp);
+
+	for(j = 0; j < height; j++)
+	{
+		for(i = 0; i < width; i++)
+		{
+			switch(bits)
+			{
+				case 1:
+					if(i%8 == 0)
+					{
+						fread(&rgb, 1, 1, f_bmp);
+						index = rgb>>7;
+						rgb_data = temp[index];
+						//putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
+						putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
+					}
+					else
+					{
+						index = (rgb >> (7 - j%8))%2;
+						rgb_data = temp[index];
+						//putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
+						putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
+					}
+					break;
+
+				case 4:
+					if(i%2 == 0)
+					{
+						fread(&rgb, 1, 1, f_bmp);
+						index = rgb/16;
+						rgb_data = temp[index];
+						//putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
+						putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
+					}
+					else
+					{
+						index = rgb%16;
+						rgb_data = temp[index];
+						//putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
+						putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
+					}
+					break;
+
+				case 8:
+					fread(&rgb, 1, 1, f_bmp);
+					index = rgb;
+					rgb_data = temp[index];
+					//putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
 					putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
-                }
-                else
-                {
-                    index = (rgb >> (7 - j%8))%2;
-                    rgb_data = temp[index];
-                    //putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
-					putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
-                }
-                break;
-                
-               case 4:
-               if(i%2 == 0)
-               {
-                   fread(&rgb, 1, 1, f_bmp);
-                   index = rgb/16;
-                   rgb_data = temp[index];
-                   //putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
-				   putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
-               }
-               else
-               {
-                   index = rgb%16;
-                   rgb_data = temp[index];
-                   //putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
-				   putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
-               }
-               break;
-               
-               case 8:
-               fread(&rgb, 1, 1, f_bmp);
-               index = rgb;
-               rgb_data = temp[index];
-               //putpixel(i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
-			   putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(rgb_data.rgbRed, rgb_data.rgbGreen, rgb_data.rgbBlue));
-               break;
-            	 
-               default:
-               break;
-           }
-        }
-    }
-    free(temp);
+					break;
+
+				default:
+					break;
+			}
+		}
+	}
+	free(temp);
 }
 
 static void draw24bits_bmp_buf(bmp_rawdata_t *bmp_buf)
 {
-    long i,j;
-    unsigned char r, g, b;
-    int index;
+	int i,j;
+	unsigned char r, g, b;
+	int index;
 	int height, width;
 
 	height = bmp_buf->height;
 	width = bmp_buf->width;
-	
-    for(j = 0; j < height; j++)
-    {
-        for(i = 0; i < width; i++)
-        {
-            fread(&b, 1, 1, f_bmp);
-            fread(&g, 1, 1, f_bmp);
-            fread(&r, 1, 1, f_bmp);
+
+	for(j = 0; j < height; j++)
+	{
+		for(i = 0; i < width; i++)
+		{
+			fread(&b, 1, 1, f_bmp);
+			fread(&g, 1, 1, f_bmp);
+			fread(&r, 1, 1, f_bmp);
 			putpixel_bmpbuf(bmp_buf, i, height - 1 - j, RGB(r, g, b));
 			if((width*3 % 4) && (i == width-1))  // bmp图片行数据 4 字节对齐, 未优化
 			{
@@ -328,66 +335,68 @@ static void draw24bits_bmp_buf(bmp_rawdata_t *bmp_buf)
 				nbyte = 4 - width*3%4;
 				fread(&dumy, 1, nbyte, f_bmp);
 			}            
-        }
-    }
+		}
+	}
 }
 
 int draw_bmp_buf(bmp_rawdata_t *bmp_buf)
 {
 	assert(bmp_buf);
 
-    switch(bmp_buf->depth)
-    {
-    	case 1:
-        case 4:
-        case 8:
-            //draw_less_8bits_bmp(bmp_buf->depth, bmp_buf->height, bmp_buf->width);
-			draw_less_8bits_bmp_buf(bmp_buf);
-            break;
-        case 24:
-            //draw24bits_bmp(bmp_buf->depth, bmp_buf->height, bmp_buf->width);
-			draw24bits_bmp_buf(bmp_buf);
-            break;
-        default:
-        	  break;
-    }
-    
-    end_draw_bmp();
-	return 0;
-}
-
-unsigned long *bmp_to_buf(unsigned char *filename, int *w, int *h)
-{
-    int bits;
-    long height, width;
-	unsigned long *buf = NULL;
-	
-	assert(h&&w);
-
-    if(begin_draw_bmp(filename, &bits, &height, &width))
-    {
-		return NULL;
-	}
-	
-	*h = height;
-	*w = width;
-    buf = (unsigned long *)malloc(width*height*sizeof(unsigned long));
-	assert(buf);
-    switch(bits)
-    {
+	switch(bmp_buf->depth)
+	{
 		case 1:
 		case 4:
 		case 8:
-            draw_less_8bits_bmp(buf, bits, height, width);
-            break;
-        case 24:
-            draw24bits_bmp(buf, bits, height, width);
-            break;
-        default:
-        	  break;
-    }
-    
-    end_draw_bmp();
+			//draw_less_8bits_bmp(bmp_buf->depth, bmp_buf->height, bmp_buf->width);
+			draw_less_8bits_bmp_buf(bmp_buf);
+			break;
+		case 24:
+			//draw24bits_bmp(bmp_buf->depth, bmp_buf->height, bmp_buf->width);
+			draw24bits_bmp_buf(bmp_buf);
+			break;
+		default:
+			break;
+	}
+
+	end_draw_bmp();
+	return 0;
+}
+
+unsigned int *bmp_to_buf(unsigned char *filename, int *w, int *h)
+{
+	int bits;
+	int height, width;
+	unsigned int *buf = NULL;
+
+	assert(h&&w);
+
+	if(begin_draw_bmp(filename, &bits, &height, &width))
+	{
+		return NULL;
+	}
+
+	*h = height;
+	*w = width;
+	buf = (unsigned int *)malloc(width*height*sizeof(unsigned int));
+	assert(buf);
+	switch(bits)
+	{
+		case 1:
+		case 4:
+		case 8:
+			// todo
+			// draw_less_8bits_bmp(buf, bits, height, width);
+			break;
+		case 24:
+			// todo
+			//draw24bits_bmp(buf, bits, height, width);
+			break;
+		default:
+			break;
+	}
+
+	end_draw_bmp();
 	return buf;
 }
 
@@ -395,7 +404,7 @@ int build_raw_bmp_data(bmp_rawdata_t **raw_data, unsigned char *file_name)
 {
 	bmp_rawdata_t *tmp_data = NULL;
 	int *tmp = NULL;
-	
+
 	assert(raw_data);
 	*raw_data = malloc(sizeof(bmp_rawdata_t));
 	assert(*raw_data);
